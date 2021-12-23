@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bezier curve</title>
+  </head>
+  <body>
+    <canvas width="1000" height="500" id="canvas" />
+    <script src="https://unpkg.com/fabric@4.6.0/dist/fabric.min.js"></script>
+    <script>
+      const canvas = new fabric.Canvas('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const control = {
+        bl: false,
+        br: false,
+        mb: false,
+        ml: false,
+        mr: false,
+        mt: false,
+        tl: false,
+        tr: false,
+        mtr: false,
+      };
+      const distinctPoint1 = new fabric.Circle({
+        radius: 15,
+        fill: 'green',
+        left: 50,
+        top: 450,
+      });
+      distinctPoint1.setControlsVisibility(control);
+
+      const distinctPoint2 = new fabric.Circle({
+        radius: 15,
+        fill: 'green',
+        left: 950,
+        top: 450,
+      });
+      distinctPoint2.setControlsVisibility(control);
+
+      const controlPoint1 = new fabric.Circle({
+        radius: 10,
+        fill: 'red',
+        left: 50,
+        top: 50,
+      });
+      controlPoint1.setControlsVisibility(control);
+
+      const controlPoint2 = new fabric.Circle({
+        radius: 10,
+        fill: 'red',
+        left: 950,
+        top: 50,
+      });
+      controlPoint2.setControlsVisibility(control);
+      const line1 = new fabric.Line(
+        [
+          distinctPoint1.left + distinctPoint1.width / 2,
+          distinctPoint1.top + distinctPoint1.width / 2,
+          controlPoint1.left + controlPoint1.width / 2,
+          controlPoint1.top + controlPoint1.width / 2,
+        ],
+        {
+          stroke: 'red',
+          strokeWidth: 2,
+        },
+      );
+      line1.selectable = false;
+      const line2 = new fabric.Line(
+        [
+          distinctPoint2.left + distinctPoint2.width / 2,
+          distinctPoint2.top + distinctPoint2.width / 2,
+          controlPoint2.left + controlPoint2.width / 2,
+          controlPoint2.top + controlPoint2.width / 2,
+        ],
+        {
+          stroke: 'red',
+          strokeWidth: 2,
+        },
+      );
+      line2.selectable = false;
+      const path = new fabric.Path('M 20 20 L 40 40 z', {
+        width: 5,
+        left: 10,
+        top: 10,
+        stroke: 'black',
+        fill: '',
+        strokeWidth: 2,
+      });
+      const calc = () => {
+        const dp1 = {
+          x: distinctPoint1.left + distinctPoint1.width / 2,
+          y: distinctPoint1.top + distinctPoint1.width / 2,
+        };
+        const dp2 = {
+          x: distinctPoint2.left + distinctPoint2.width / 2,
+          y: distinctPoint2.top + distinctPoint2.width / 2,
+        };
+
+        const c1 = {
+          x: controlPoint1.left + controlPoint1.width / 2,
+          y: controlPoint1.top + controlPoint1.width / 2,
+        };
+        const c2 = {
+          x: controlPoint2.left + controlPoint2.width / 2,
+          y: controlPoint2.top + controlPoint2.width / 2,
+        };
+
+        line1.set({
+          x1: dp1.x,
+          y1: dp1.y,
+          x2: c1.x,
+          y2: c1.y,
+        });
+
+        line2.set({
+          x1: dp2.x,
+          y1: dp2.y,
+          x2: c2.x,
+          y2: c2.y,
+        });
+        const lerp = (p1, p2, t) => ({
+          x: p1.x + t * (p2.x - p1.x),
+          y: p1.y + t * (p2.y - p1.y),
+        });
+
+        const points = [];
+        for (let i = 0; i < 1; i += 0.1) {
+          const sec = [i === 0 ? 'M' : 'L'];
+          const a1 = lerp(dp1, c1, i);
+          const a2 = lerp(c1, c2, i);
+          const a3 = lerp(c2, dp2, i);
+
+          const b1 = lerp(a1, a2, i);
+          const b2 = lerp(a2, a3, i);
+
+          const c = lerp(b1, b2, i);
+
+          sec.push(c.x);
+          sec.push(c.y);
+          points.push(sec);
+        }
+        points.push(['z']);
+        path.initialize(points);
+        canvas.renderAll();
+      };
+      canvas.on('object:moving', calc);
+      calc();
+      canvas.add(
+        path,
+        line1,
+        line2,
+        distinctPoint1,
+        distinctPoint2,
+        controlPoint1,
+        controlPoint2,
+      );
+      canvas.setBackgroundColor('#dfdfdf');
+    </script>
+  </body>
+</html>
